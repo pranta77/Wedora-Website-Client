@@ -1,9 +1,11 @@
+import HeroSection from "@/components/home/HeroSection";
+import FeaturedServices from "@/components/home/FeaturedServices";
 
-
-export default function Home() {
+export default function HomePage() {
   return (
-    <main>
-      Hlw
-    </main>
+    <>
+      <HeroSection />
+      <FeaturedServices />
+    </>
   );
 }
