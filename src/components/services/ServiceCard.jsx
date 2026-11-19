@@ -1,6 +1,7 @@
 
 import Link from "next/link";
 import { MapPin, ArrowRight, Tag } from "lucide-react";
+import Image from "next/image";
 
 const ServiceCard = ({ service }) => {
   const {
@@ -16,9 +17,11 @@ const ServiceCard = ({ service }) => {
     <div className="group overflow-hidden rounded-2xl border border-pink-100 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
       {/* Service Image */}
       <div className="relative h-56 overflow-hidden bg-pink-50">
-        <img
+        <Image
           src={images?.[0] || "/images/services/placeholder.jpg"}
           alt={serviceName}
+          width={600}
+          height={500}
           className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
         />
 
