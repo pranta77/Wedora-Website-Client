@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
@@ -6,6 +5,7 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import { MapPin, Tag, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 import BookingForm from "@/components/services/BookingForm";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
@@ -23,7 +23,7 @@ export default function ServiceDetailsPage() {
   const fetchService = useCallback(async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/services/${id}`
+        `${process.env.NEXT_PUBLIC_API_URL}/services/${id}`,
       );
 
       if (!response.ok) {
@@ -51,20 +51,37 @@ export default function ServiceDetailsPage() {
   };
 
   const handleBooking = async (bookingData) => {
-    try {
-      setBookingLoading(true);
+  try {
+    setBookingLoading(true);
 
-      // We'll connect the authenticated booking API in a later step.
-      console.log("Booking details:", {
-        serviceId: id,
-        ...bookingData,
-      });
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setBookingLoading(false);
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/bookings`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          serviceId: id,
+          ...bookingData,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to submit booking.");
     }
-  };
+
+    toast.success(data.message);
+  } catch (error) {
+    toast.error(error.message || "Something went wrong.");
+  } finally {
+    setBookingLoading(false);
+  }
+};
 
   if (loading) {
     return <LoadingSpinner message="Loading service details..." />;
@@ -181,10 +198,7 @@ export default function ServiceDetailsPage() {
             </div>
 
             <div className="mt-8">
-              <BookingForm
-                onSubmit={handleBooking}
-                loading={bookingLoading}
-              />
+              <BookingForm onSubmit={handleBooking} loading={bookingLoading} />
             </div>
           </div>
         </div>
