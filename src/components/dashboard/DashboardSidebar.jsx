@@ -11,43 +11,52 @@ import {
   PlusCircle,
   CreditCard,
   UserRound,
+  Users,
+  ClipboardList,
+  ReceiptText,
 } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
 const DashboardSidebar = () => {
   const pathname = usePathname();
+  const { data: session } = authClient.useSession();
 
-  const links = [
-    {
-      name: "Overview",
-      href: "/dashboard",
-      icon: LayoutDashboard,
+  const role = session?.user?.role;
+
+  const navigation = {
+    vendor: {
+      title: "Vendor Dashboard",
+      links: [
+        { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
+        { name: "Booking Requests", href: "/dashboard/vendor/bookings", icon: CalendarDays },
+        { name: "My Services", href: "/dashboard/vendor/services", icon: BriefcaseBusiness },
+        { name: "Add Service", href: "/dashboard/vendor/services/add", icon: PlusCircle },
+        { name: "Subscription", href: "/dashboard/vendor/subscription", icon: CreditCard },
+        { name: "My Profile", href: "/dashboard/vendor/profile", icon: UserRound },
+      ],
     },
-    {
-      name: "Booking Requests",
-      href: "/dashboard/vendor/bookings",
-      icon: CalendarDays,
+
+    customer: {
+      title: "Customer Dashboard",
+      links: [
+        { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
+        { name: "My Bookings", href: "/dashboard/customer/bookings", icon: CalendarDays },
+        { name: "My Profile", href: "/dashboard/customer/profile", icon: UserRound },
+      ],
     },
-    {
-      name: "My Services",
-      href: "/dashboard/vendor/services",
-      icon: BriefcaseBusiness,
+
+    admin: {
+      title: "Admin Dashboard",
+      links: [
+        { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
+        { name: "Manage Users", href: "/dashboard/admin/users", icon: Users },
+        { name: "Manage Services", href: "/dashboard/admin/services", icon: BriefcaseBusiness },
+        { name: "Transactions", href: "/dashboard/admin/transactions", icon: ReceiptText },
+      ],
     },
-    {
-      name: "Add Service",
-      href: "/dashboard/vendor/services/add",
-      icon: PlusCircle,
-    },
-    {
-      name: "Subscription",
-      href: "/dashboard/vendor/subscription",
-      icon: CreditCard,
-    },
-    {
-      name: "My Profile",
-      href: "/dashboard/vendor/profile",
-      icon: UserRound,
-    },
-  ];
+  };
+
+  const currentNavigation = navigation[role];
 
   return (
     <aside className="flex min-h-full w-64 flex-col border-r border-pink-100 bg-white p-5">
@@ -64,11 +73,11 @@ const DashboardSidebar = () => {
 
       {/* Navigation */}
       <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-400">
-        Vendor Dashboard
+        {currentNavigation?.title || "Dashboard"}
       </p>
 
       <nav className="space-y-2">
-        {links.map((link) => {
+        {currentNavigation?.links.map((link) => {
           const Icon = link.icon;
 
           const isActive =
