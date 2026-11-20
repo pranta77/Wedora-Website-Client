@@ -1,9 +1,15 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, BriefcaseBusiness, MapPin, Pencil, LoaderCircle } from "lucide-react";
+import {
+  Plus,
+  BriefcaseBusiness,
+  MapPin,
+  Pencil,
+  LoaderCircle,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
 
@@ -18,7 +24,7 @@ export default function MyServicesPage() {
           `${process.env.NEXT_PUBLIC_API_URL}/vendor/services`,
           {
             credentials: "include",
-          }
+          },
         );
 
         const data = await response.json();
@@ -37,6 +43,38 @@ export default function MyServicesPage() {
 
     fetchServices();
   }, []);
+
+  const handleDeleteService = async (id) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this service?",
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/vendor/services/${id}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to delete service.");
+      }
+
+      setServices((previous) =>
+        previous.filter((service) => service._id !== id),
+      );
+
+      toast.success(data.message);
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -124,6 +162,24 @@ export default function MyServicesPage() {
                 <p className="text-lg font-bold text-pink-600">
                   ৳{Number(service.price).toLocaleString("en-BD")}
                 </p>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <Link
+                    href={`/dashboard/vendor/services/edit/${service._id}`}
+                    className="flex items-center justify-center gap-2 rounded-xl border border-pink-200 bg-pink-50 px-3 py-2.5 text-sm font-semibold text-pink-600 transition hover:bg-pink-100"
+                  >
+                    <Pencil size={17} />
+                    Edit
+                  </Link>
+
+                  <button
+                    onClick={() => handleDeleteService(service._id)}
+                    className="flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-100"
+                  >
+                    <Trash2 size={17} />
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))}

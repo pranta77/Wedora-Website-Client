@@ -1,9 +1,9 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CalendarDays, MapPin, PackageOpen } from "lucide-react";
+import { toast } from "sonner";
 
 export default function CustomerBookingsPage() {
   const [bookings, setBookings] = useState([]);
@@ -17,7 +17,7 @@ export default function CustomerBookingsPage() {
           `${process.env.NEXT_PUBLIC_API_URL}/customer/bookings`,
           {
             credentials: "include",
-          }
+          },
         );
 
         const data = await response.json();
@@ -36,13 +36,54 @@ export default function CustomerBookingsPage() {
 
     fetchBookings();
   }, []);
+  const handleCancelConfirm = (booking) => {
+    toast(`Are you sure you want to cancel "${booking.serviceName}"?`, {
+      duration: 10000,
+      action: {
+        label: "Confirm",
+        onClick: () => cancelBooking(booking._id),
+      },
+      cancel: {
+        label: "Keep Booking",
+        onClick: () => {},
+      },
+    });
+  };
 
+  const cancelBooking = async (id) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/customer/bookings/${id}/cancel`,
+        {
+          method: "PATCH",
+          credentials: "include",
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to cancel booking.");
+      }
+
+      setBookings((previous) =>
+        previous.map((booking) =>
+          booking._id === id ? { ...booking, status: "cancelled" } : booking,
+        ),
+      );
+
+      toast.success(data.message);
+    } catch (error) {
+      toast.error(error.message || "Something went wrong.");
+    }
+  };
   const getStatusStyle = (status) => {
     const styles = {
       pending: "bg-yellow-100 text-yellow-700",
       accepted: "bg-green-100 text-green-700",
       rejected: "bg-red-100 text-red-700",
       completed: "bg-blue-100 text-blue-700",
+      cancelled: "bg-gray-100 text-gray-600",
     };
 
     return styles[status?.toLowerCase()] || "bg-gray-100 text-gray-700";
@@ -108,7 +149,7 @@ export default function CustomerBookingsPage() {
 
                 <span
                   className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold capitalize ${getStatusStyle(
-                    booking.status
+                    booking.status,
                   )}`}
                 >
                   {booking.status}
@@ -122,7 +163,9 @@ export default function CustomerBookingsPage() {
               <div className="mt-5 space-y-3 text-sm text-gray-600">
                 <div className="flex items-center gap-2">
                   <CalendarDays size={18} className="text-[#285943]" />
-                  {new Date(`${booking.eventDate}T00:00:00`).toLocaleDateString()}
+                  {new Date(
+                    `${booking.eventDate}T00:00:00`,
+                  ).toLocaleDateString()}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -132,13 +175,19 @@ export default function CustomerBookingsPage() {
               </div>
 
               <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
-                <span className="text-sm text-gray-500">
-                  Service Price
-                </span>
+                <span className="text-sm text-gray-500">Service Price</span>
 
                 <span className="text-lg font-bold text-[#285943]">
                   ৳{Number(booking.price).toLocaleString("en-BD")}
                 </span>
+                {booking.status === "pending" && (
+                  <button
+                    onClick={() => handleCancelConfirm(booking)}
+                    className="mt-4 w-full rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-100"
+                  >
+                    Cancel Booking
+                  </button>
+                )}
               </div>
             </div>
           ))}
