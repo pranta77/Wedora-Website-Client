@@ -1,6 +1,6 @@
 
 "use client";
-
+import { toast } from "sonner";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ImagePlus, ArrowLeft } from "lucide-react";
@@ -30,11 +30,48 @@ export default function AddServicePage() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    // We'll connect the backend API and image upload next.
-    console.log("New service:", formData);
-  };
+  setLoading(true);
+
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/services`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(formData),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to add service.");
+    }
+
+    toast.success(data.message);
+
+    setFormData({
+      serviceName: "",
+      category: "",
+      description: "",
+      price: "",
+      location: "",
+      images: "",
+    });
+
+    router.push("/dashboard/vendor/services");
+    router.refresh();
+  } catch (error) {
+    toast.error(error.message || "Something went wrong.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">

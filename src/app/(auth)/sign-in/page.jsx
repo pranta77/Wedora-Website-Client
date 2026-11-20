@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -35,18 +34,20 @@ export default function SignInPage() {
         throw new Error(error.message || "Sign in failed.");
       }
 
-      const role = data?.user?.role;
+      const { data: sessionData } = await authClient.getSession();
+
+      const role = sessionData?.user?.role;
 
       toast.success("Welcome back to Wedora!");
 
-      if (role === "vendor") {
-        router.push("/dashboard/vendor");
-      } else if (role === "admin") {
-        router.push("/dashboard/admin");
-      } else {
-        router.push("/dashboard/customer");
-      }
+      const dashboardLink =
+        role === "vendor"
+          ? "/dashboard/vendor"
+          : role === "admin"
+            ? "/dashboard/admin"
+            : "/dashboard/customer";
 
+      router.replace(dashboardLink);
       router.refresh();
     } catch (err) {
       setError(err.message || "Something went wrong.");
@@ -64,9 +65,7 @@ export default function SignInPage() {
               <Heart className="h-8 w-8 fill-rose-500 text-rose-500" />
             </div>
 
-            <h1 className="text-3xl font-bold text-gray-900">
-              Welcome Back
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
 
             <p className="mt-2 text-sm text-gray-500">
               Sign in to continue your journey with Wedora.
@@ -107,11 +106,7 @@ export default function SignInPage() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
                 >
-                  {showPassword ? (
-                    <EyeOff size={20} />
-                  ) : (
-                    <Eye size={20} />
-                  )}
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
             </div>
