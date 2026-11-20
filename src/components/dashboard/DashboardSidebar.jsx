@@ -3,7 +3,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Heart } from "lucide-react";
+import {
+  LayoutDashboard,
+  Heart,
+  CalendarDays,
+  BriefcaseBusiness,
+  PlusCircle,
+  CreditCard,
+  UserRound,
+} from "lucide-react";
 
 const DashboardSidebar = () => {
   const pathname = usePathname();
@@ -13,6 +21,31 @@ const DashboardSidebar = () => {
       name: "Overview",
       href: "/dashboard",
       icon: LayoutDashboard,
+    },
+    {
+      name: "Booking Requests",
+      href: "/dashboard/vendor/bookings",
+      icon: CalendarDays,
+    },
+    {
+      name: "My Services",
+      href: "/dashboard/vendor/services",
+      icon: BriefcaseBusiness,
+    },
+    {
+      name: "Add Service",
+      href: "/dashboard/vendor/services/add",
+      icon: PlusCircle,
+    },
+    {
+      name: "Subscription",
+      href: "/dashboard/vendor/subscription",
+      icon: CreditCard,
+    },
+    {
+      name: "My Profile",
+      href: "/dashboard/vendor/profile",
+      icon: UserRound,
     },
   ];
 
@@ -31,13 +64,17 @@ const DashboardSidebar = () => {
 
       {/* Navigation */}
       <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-400">
-        Dashboard Menu
+        Vendor Dashboard
       </p>
 
       <nav className="space-y-2">
         {links.map((link) => {
           const Icon = link.icon;
-          const isActive = pathname === link.href;
+
+          const isActive =
+            pathname === link.href ||
+            (link.href !== "/dashboard" &&
+              pathname.startsWith(`${link.href}/`));
 
           return (
             <Link
