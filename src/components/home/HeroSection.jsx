@@ -23,9 +23,9 @@ const HeroSection = () => {
           </div>
 
           <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
-            Your Perfect Day,
+            &quot;Your Perfect Day,
             <span className="block text-pink-600">
-              Our Perfect Plan.
+              Our Perfect Plan.&quot;
             </span>
           </h1>
 
@@ -66,6 +66,7 @@ const HeroSection = () => {
             className="relative h-87.5 w-full rounded-3xl object-cover shadow-2xl sm:h-112.5"
             width={500}
             height={500}
+            priority
           />
 
           <div className="absolute -bottom-5 -left-3 rounded-2xl bg-white p-4 shadow-xl sm:-left-6 sm:p-5">

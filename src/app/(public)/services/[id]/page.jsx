@@ -12,6 +12,8 @@ import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import ErrorState from "@/components/shared/ErrorState";
 import EmptyState from "@/components/shared/EmptyState";
 
+
+
 export default function ServiceDetailsPage() {
   const { id } = useParams();
 
@@ -20,10 +22,14 @@ export default function ServiceDetailsPage() {
   const [error, setError] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
 
+
   const fetchService = useCallback(async () => {
+    
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/services/${id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/services/${id}`,{
+          
+        }
       );
 
       if (!response.ok) {

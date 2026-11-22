@@ -3,11 +3,17 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Check, CreditCard, LoaderCircle, Crown } from "lucide-react";
+import {
+  Check,
+  CreditCard,
+  LoaderCircle,
+  Crown,
+} from "lucide-react";
 
 export default function VendorSubscriptionPage() {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -32,6 +38,34 @@ export default function VendorSubscriptionPage() {
 
     fetchPlans();
   }, []);
+
+  // Handle Premium Checkout
+  const handleUpgrade = async () => {
+    try {
+      setCheckoutLoading(true);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/create-checkout-session`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Unable to start checkout."
+        );
+      }
+
+      window.location.href = data.url;
+    } catch (error) {
+      toast.error(error.message);
+      setCheckoutLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -59,74 +93,96 @@ export default function VendorSubscriptionPage() {
         </p>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {plans.map((plan) => (
-            <div
-              key={plan.id}
-              className={`relative rounded-2xl border bg-white p-6 shadow-sm ${
-                plan.id === "premium"
-                  ? "border-pink-400 ring-2 ring-pink-100"
-                  : "border-pink-100"
-              }`}
-            >
-              {plan.id === "premium" && (
-                <span className="absolute -top-3 right-5 rounded-full bg-pink-600 px-4 py-1 text-xs font-bold text-white">
-                  Popular
-                </span>
-              )}
+          {plans.map((plan) => {
+            const isPremium = plan.id === "premium";
+            const isFree = Number(plan.price) === 0;
 
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-pink-100 text-pink-600">
-                  {plan.id === "premium" ? (
-                    <Crown size={22} />
-                  ) : (
-                    <CreditCard size={22} />
-                  )}
+            return (
+              <div
+                key={plan.id}
+                className={`relative rounded-2xl border bg-white p-6 shadow-sm ${
+                  isPremium
+                    ? "border-pink-400 ring-2 ring-pink-100"
+                    : "border-pink-100"
+                }`}
+              >
+                {isPremium && (
+                  <span className="absolute -top-3 right-5 rounded-full bg-pink-600 px-4 py-1 text-xs font-bold text-white">
+                    Popular
+                  </span>
+                )}
+
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-pink-100 text-pink-600">
+                    {isPremium ? (
+                      <Crown size={22} />
+                    ) : (
+                      <CreditCard size={22} />
+                    )}
+                  </div>
+
+                  <h2 className="text-xl font-bold text-gray-900">
+                    {plan.name}
+                  </h2>
                 </div>
 
-                <h2 className="text-xl font-bold text-gray-900">
-                  {plan.name}
-                </h2>
+                <div className="mt-6">
+                  <span className="text-4xl font-extrabold text-gray-900">
+                    ৳{Number(plan.price).toLocaleString("en-BD")}
+                  </span>
+
+                  <span className="ml-2 text-sm text-gray-500">
+                    {plan.duration}
+                  </span>
+                </div>
+
+                <div className="my-6 border-t border-gray-100" />
+
+                <h3 className="mb-4 font-semibold text-gray-800">
+                  What&apos;s included:
+                </h3>
+
+                <ul className="space-y-3">
+                  {plan.features.map((feature) => (
+                    <li
+                      key={feature}
+                      className="flex items-start gap-3 text-sm text-gray-600"
+                    >
+                      <Check
+                        size={18}
+                        className="shrink-0 text-green-600"
+                      />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  type="button"
+                  onClick={isPremium ? handleUpgrade : undefined}
+                  disabled={!isPremium || isFree || checkoutLoading}
+                  className={`mt-8 w-full rounded-xl px-5 py-3 font-semibold transition ${
+                    isPremium
+                      ? "bg-pink-600 text-white hover:bg-pink-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      : "cursor-not-allowed bg-gray-100 text-gray-500"
+                  }`}
+                >
+                  {checkoutLoading && isPremium ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <LoaderCircle size={18} className="animate-spin" />
+                      Redirecting...
+                    </span>
+                  ) : isFree ? (
+                    "Free Plan"
+                  ) : isPremium ? (
+                    "Upgrade to Premium"
+                  ) : (
+                    "Coming Soon"
+                  )}
+                </button>
               </div>
-
-              <div className="mt-6">
-                <span className="text-4xl font-extrabold text-gray-900">
-                  ৳{Number(plan.price).toLocaleString("en-BD")}
-                </span>
-                <span className="ml-2 text-sm text-gray-500">
-                  {plan.duration}
-                </span>
-              </div>
-
-              <div className="my-6 border-t border-gray-100" />
-
-              <h3 className="mb-4 font-semibold text-gray-800">
-                What&apos;s included:
-              </h3>
-
-              <ul className="space-y-3">
-                {plan.features.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-start gap-3 text-sm text-gray-600"
-                  >
-                    <Check
-                      size={18}
-                      className="shrink-0 text-green-600"
-                    />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-
-              <button
-                type="button"
-                disabled
-                className="mt-8 w-full cursor-not-allowed rounded-xl bg-gray-100 px-5 py-3 font-semibold text-gray-500"
-              >
-                {plan.price === 0 ? "Free Plan" : "Coming Soon"}
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -134,9 +190,9 @@ export default function VendorSubscriptionPage() {
         <h3 className="font-bold text-gray-900">
           Subscription Payments
         </h3>
+
         <p className="mt-2 text-sm text-gray-600">
-          Paid subscriptions will be available once our secure payment
-          system is integrated.
+          Secure subscription payments are powered by Stripe.
         </p>
       </div>
     </div>
