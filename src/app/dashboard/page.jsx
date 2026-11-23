@@ -1,4 +1,7 @@
 
+"use client";
+
+import { useEffect, useState } from "react";
 import {
   CalendarDays,
   Clock,
@@ -9,6 +12,49 @@ import {
 import StatsCard from "@/components/dashboard/StatsCard";
 
 export default function DashboardPage() {
+  const [counts, setCounts] = useState({
+    total: 0,
+    pending: 0,
+    accepted: 0,
+    rejected: 0,
+  });
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/customer/bookings`,
+          { credentials: "include" }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to load bookings.");
+        }
+
+        const bookings = data.bookings || [];
+
+        setCounts({
+          total: bookings.length,
+          pending: bookings.filter(
+            (booking) => booking.status === "pending"
+          ).length,
+          accepted: bookings.filter(
+            (booking) => booking.status === "accepted"
+          ).length,
+          rejected: bookings.filter(
+            (booking) => booking.status === "rejected"
+          ).length,
+        });
+      } catch (error) {
+        console.error("Dashboard error:", error);
+      }
+    };
+
+    fetchBookings();
+  }, []);
+
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
@@ -26,28 +72,28 @@ export default function DashboardPage() {
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <StatsCard
           title="Total Bookings"
-          value={0}
+          value={counts.total}
           icon={CalendarDays}
           color="pink"
         />
 
         <StatsCard
           title="Pending Bookings"
-          value={0}
+          value={counts.pending}
           icon={Clock}
           color="orange"
         />
 
         <StatsCard
           title="Accepted Bookings"
-          value={0}
+          value={counts.accepted}
           icon={CheckCircle}
           color="green"
         />
 
         <StatsCard
           title="Rejected Bookings"
-          value={0}
+          value={counts.rejected}
           icon={XCircle}
           color="purple"
         />
