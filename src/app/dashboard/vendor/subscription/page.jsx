@@ -12,6 +12,8 @@ export default function VendorSubscriptionPage() {
   const [vendor, setVendor] = useState(null);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -86,6 +88,40 @@ export default function VendorSubscriptionPage() {
       setCheckoutLoading(false);
     }
   };
+  // Handle Premium Subscription Cancellation
+  const handleCancelSubscription = async () => {
+    try {
+      setCancelLoading(true);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/cancel-subscription`,
+        {
+          method: "POST",
+          credentials: "include",
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Unable to cancel subscription.");
+      }
+
+      setVendor((prev) => ({
+        ...prev,
+        subscriptionCancelAtPeriodEnd: true,
+        subscriptionExpiresAt: data.expiresAt || prev.subscriptionExpiresAt,
+      }));
+
+      setShowCancelDialog(false);
+
+      toast.success(data.message || "Cancellation scheduled successfully.");
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setCancelLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -140,6 +176,24 @@ export default function VendorSubscriptionPage() {
               </p>
             )}
           </div>
+          {vendor.subscriptionPlan === "premium" &&
+            ["active", "trialing"].includes(vendor.subscriptionStatus) &&
+            !vendor.subscriptionCancelAtPeriodEnd && (
+              <button
+                type="button"
+                onClick={() => setShowCancelDialog(true)}
+                className="mt-5 rounded-xl border border-red-200 px-5 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+              >
+                Cancel Subscription
+              </button>
+            )}
+
+          {vendor.subscriptionCancelAtPeriodEnd && (
+            <p className="mt-5 rounded-xl bg-amber-100 p-4 text-sm font-medium text-amber-800">
+              Your Premium subscription is scheduled for cancellation. You can
+              continue using Premium until your expiry date.
+            </p>
+          )}
         </div>
       )}
 
@@ -256,6 +310,48 @@ export default function VendorSubscriptionPage() {
           Secure subscription payments are powered by Stripe.
         </p>
       </div>
+      {showCancelDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="text-xl font-bold text-gray-900">
+              Cancel Premium Subscription?
+            </h2>
+
+            <p className="mt-3 text-sm leading-6 text-gray-600">
+              Are you sure you want to cancel your Premium subscription? Your
+              Premium benefits will remain active until your subscription expiry
+              date.
+            </p>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowCancelDialog(false)}
+                disabled={cancelLoading}
+                className="flex-1 rounded-xl border border-gray-200 px-4 py-3 font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                Keep Premium
+              </button>
+
+              <button
+                type="button"
+                onClick={handleCancelSubscription}
+                disabled={cancelLoading}
+                className="flex-1 rounded-xl bg-red-600 px-4 py-3 font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+              >
+                {cancelLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <LoaderCircle size={18} className="animate-spin" />
+                    Cancelling...
+                  </span>
+                ) : (
+                  "Confirm Cancellation"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
