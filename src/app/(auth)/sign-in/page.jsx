@@ -2,14 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Heart, Eye, EyeOff } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 
 export default function SignInPage() {
-  const router = useRouter();
-
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -25,7 +22,7 @@ export default function SignInPage() {
     try {
       setLoading(true);
 
-      const { data, error } = await authClient.signIn.email({
+      const { error } = await authClient.signIn.email({
         email,
         password,
       });
@@ -36,7 +33,13 @@ export default function SignInPage() {
 
       const { data: sessionData } = await authClient.getSession();
 
-      const role = sessionData?.user?.role;
+      if (!sessionData?.user) {
+        throw new Error(
+          "Signed in, but session cookie was not saved. Check backend CORS/cookie settings."
+        );
+      }
+
+      const role = sessionData.user.role;
 
       toast.success("Welcome back to Wedora!");
 
@@ -47,8 +50,7 @@ export default function SignInPage() {
             ? "/dashboard/admin"
             : "/dashboard/customer";
 
-      router.replace(dashboardLink);
-      router.refresh();
+      window.location.href = dashboardLink;
     } catch (err) {
       setError(err.message || "Something went wrong.");
     } finally {

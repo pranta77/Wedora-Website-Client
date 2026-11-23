@@ -1,17 +1,15 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import {
-  Check,
-  CreditCard,
-  LoaderCircle,
-  Crown,
-} from "lucide-react";
+import { Check, CreditCard, LoaderCircle, Crown } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
 export default function VendorSubscriptionPage() {
+  const { data: session } = authClient.useSession();
+
   const [plans, setPlans] = useState([]);
+  const [vendor, setVendor] = useState(null);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
@@ -19,7 +17,7 @@ export default function VendorSubscriptionPage() {
     const fetchPlans = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/subscription-plans`
+          `${process.env.NEXT_PUBLIC_API_URL}/subscription-plans`,
         );
 
         const data = await response.json();
@@ -38,6 +36,30 @@ export default function VendorSubscriptionPage() {
 
     fetchPlans();
   }, []);
+  useEffect(() => {
+    const fetchVendor = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/vendor/profile`,
+          {
+            credentials: "include",
+          },
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to load subscription.");
+        }
+
+        setVendor(data.vendor);
+      } catch (error) {
+        toast.error(error.message);
+      }
+    };
+
+    fetchVendor();
+  }, []);
 
   // Handle Premium Checkout
   const handleUpgrade = async () => {
@@ -49,15 +71,13 @@ export default function VendorSubscriptionPage() {
         {
           method: "POST",
           credentials: "include",
-        }
+        },
       );
 
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Unable to start checkout."
-        );
+        throw new Error(data.message || "Unable to start checkout.");
       }
 
       window.location.href = data.url;
@@ -82,6 +102,46 @@ export default function VendorSubscriptionPage() {
           Choose a plan to grow your wedding business with Wedora.
         </p>
       </div>
+      {vendor && (
+        <div className="rounded-2xl border border-pink-200 bg-pink-50 p-6">
+          <div className="flex items-center gap-3">
+            <Crown className="text-pink-600" size={28} />
+
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">
+                Current Subscription
+              </h2>
+
+              <p className="text-sm text-gray-600">
+                Your current plan:{" "}
+                <span className="font-bold capitalize text-pink-600">
+                  {vendor.subscriptionPlan || "Basic"}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-6 text-sm">
+            <p>
+              **Status:**{" "}
+              <span className="font-semibold capitalize">
+                {vendor.subscriptionStatus || "Free"}
+              </span>
+            </p>
+
+            {vendor.subscriptionExpiresAt && (
+              <p>
+                **Expires:**{" "}
+                <span className="font-semibold">
+                  {new Date(vendor.subscriptionExpiresAt).toLocaleDateString(
+                    "en-BD",
+                  )}
+                </span>
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-16">
@@ -96,6 +156,12 @@ export default function VendorSubscriptionPage() {
           {plans.map((plan) => {
             const isPremium = plan.id === "premium";
             const isFree = Number(plan.price) === 0;
+
+            const isCurrentPlan =
+              vendor?.subscriptionPlan === plan.id &&
+              (isFree ||
+                vendor?.subscriptionStatus === "active" ||
+                vendor?.subscriptionStatus === "trialing");
 
             return (
               <div
@@ -114,11 +180,7 @@ export default function VendorSubscriptionPage() {
 
                 <div className="flex items-center gap-3">
                   <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-pink-100 text-pink-600">
-                    {isPremium ? (
-                      <Crown size={22} />
-                    ) : (
-                      <CreditCard size={22} />
-                    )}
+                    {isPremium ? <Crown size={22} /> : <CreditCard size={22} />}
                   </div>
 
                   <h2 className="text-xl font-bold text-gray-900">
@@ -148,10 +210,7 @@ export default function VendorSubscriptionPage() {
                       key={feature}
                       className="flex items-start gap-3 text-sm text-gray-600"
                     >
-                      <Check
-                        size={18}
-                        className="shrink-0 text-green-600"
-                      />
+                      <Check size={18} className="shrink-0 text-green-600" />
                       {feature}
                     </li>
                   ))}
@@ -159,10 +218,12 @@ export default function VendorSubscriptionPage() {
 
                 <button
                   type="button"
-                  onClick={isPremium ? handleUpgrade : undefined}
-                  disabled={!isPremium || isFree || checkoutLoading}
+                  onClick={
+                    isPremium && !isCurrentPlan ? handleUpgrade : undefined
+                  }
+                  disabled={isCurrentPlan || !isPremium || checkoutLoading}
                   className={`mt-8 w-full rounded-xl px-5 py-3 font-semibold transition ${
-                    isPremium
+                    isPremium && !isCurrentPlan
                       ? "bg-pink-600 text-white hover:bg-pink-700 disabled:cursor-not-allowed disabled:opacity-60"
                       : "cursor-not-allowed bg-gray-100 text-gray-500"
                   }`}
@@ -172,6 +233,8 @@ export default function VendorSubscriptionPage() {
                       <LoaderCircle size={18} className="animate-spin" />
                       Redirecting...
                     </span>
+                  ) : isCurrentPlan ? (
+                    "Current Plan"
                   ) : isFree ? (
                     "Free Plan"
                   ) : isPremium ? (
@@ -187,9 +250,7 @@ export default function VendorSubscriptionPage() {
       )}
 
       <div className="rounded-2xl border border-pink-100 bg-pink-50 p-5">
-        <h3 className="font-bold text-gray-900">
-          Subscription Payments
-        </h3>
+        <h3 className="font-bold text-gray-900">Subscription Payments</h3>
 
         <p className="mt-2 text-sm text-gray-600">
           Secure subscription payments are powered by Stripe.
