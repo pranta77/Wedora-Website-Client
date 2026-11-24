@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -67,7 +66,7 @@ export default function SignUpPage() {
           {
             method: "POST",
             body: imageData,
-          }
+          },
         );
 
         const uploadResult = await uploadResponse.json();
@@ -97,9 +96,7 @@ export default function SignUpPage() {
         toast.success("Your Wedora account has been created!");
 
         router.push(
-          role === "vendor"
-            ? "/dashboard/vendor"
-            : "/dashboard/customer"
+          role === "vendor" ? "/dashboard/vendor" : "/dashboard/customer",
         );
 
         router.refresh();
@@ -119,7 +116,7 @@ export default function SignUpPage() {
 
       const { error } = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/dashboard",
+        callbackURL: "http://localhost:3000/dashboard",
       });
 
       if (error) {
@@ -141,9 +138,7 @@ export default function SignUpPage() {
               <Heart className="h-8 w-8 fill-rose-500 text-rose-500" />
             </div>
 
-            <h1 className="text-3xl font-bold text-gray-900">
-              Join Wedora
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900">Join Wedora</h1>
 
             <p className="mt-2 text-sm text-gray-500">
               Create your account and start planning beautiful weddings.
@@ -289,17 +284,13 @@ export default function SignUpPage() {
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? (
-                    <EyeOff size={19} />
-                  ) : (
-                    <Eye size={19} />
-                  )}
+                  {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
                 </button>
               </div>
 
               <p className="mt-2 text-xs leading-5 text-gray-400">
-                At least 6 characters, including one uppercase and one
-                lowercase letter.
+                At least 6 characters, including one uppercase and one lowercase
+                letter.
               </p>
             </div>
 
