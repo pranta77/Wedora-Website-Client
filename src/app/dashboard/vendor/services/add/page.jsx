@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ImagePlus, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function AddServicePage() {
   const router = useRouter();
@@ -16,8 +17,11 @@ export default function AddServicePage() {
     location: "",
     images: "",
   });
+  
 
   const [loading, setLoading] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+const [imagePreview, setImagePreview] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -27,6 +31,24 @@ export default function AddServicePage() {
       [name]: value,
     }));
   };
+  const handleImageChange = (e) => {
+  const file = e.target.files[0];
+
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    toast.error("Please select a valid image.");
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    toast.error("Image size must be less than 5 MB.");
+    return;
+  }
+
+  setImageFile(file);
+  setImagePreview(URL.createObjectURL(file));
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,6 +56,28 @@ export default function AddServicePage() {
     setLoading(true);
 
     try {
+      if (!imageFile) {
+  throw new Error("Please select a service image.");
+}
+
+const imageData = new FormData();
+imageData.append("image", imageFile);
+
+const uploadResponse = await fetch(
+  `https://api.imgbb.com/1/upload?key=${process.env.NEXT_PUBLIC_IMGBB_API_KEY}`,
+  {
+    method: "POST",
+    body: imageData,
+  }
+);
+
+const uploadData = await uploadResponse.json();
+
+if (!uploadResponse.ok || !uploadData.success) {
+  throw new Error("Image upload failed. Please try again.");
+}
+
+const imageUrl = uploadData.data.url;
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/services`,
         {
@@ -42,7 +86,10 @@ export default function AddServicePage() {
             "Content-Type": "application/json",
           },
           credentials: "include",
-          body: JSON.stringify(formData),
+          body: JSON.stringify({
+  ...formData,
+  images: imageUrl,
+}),
         },
       );
 
@@ -62,6 +109,8 @@ export default function AddServicePage() {
         location: "",
         images: "",
       });
+      setImageFile(null);
+setImagePreview("");
 
       router.push("/dashboard/vendor/services");
       router.refresh();
@@ -188,25 +237,35 @@ export default function AddServicePage() {
         </div>
 
         <div>
-          <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
-            <ImagePlus size={18} className="text-pink-600" />
-            Service Image URL
-          </label>
+  <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
+    <ImagePlus size={18} className="text-pink-600" />
+    Service Image
+  </label>
 
-          <input
-            type="url"
-            name="images"
-            value={formData.images}
-            onChange={handleChange}
-            placeholder="Paste your service image URL"
-            required
-            className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-pink-500"
-          />
+  <input
+    type="file"
+    accept="image/*"
+    onChange={handleImageChange}
+    required
+    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-pink-50 file:px-4 file:py-2 file:font-semibold file:text-pink-600"
+  />
 
-          <p className="mt-2 text-xs text-gray-400">
-            We&apos;ll connect image uploading in a later step.
-          </p>
-        </div>
+  <p className="mt-2 text-xs text-gray-400">
+    Upload an image (JPG, PNG, WEBP). Maximum size: 5 MB.
+  </p>
+
+  {imagePreview && (
+    <div className="mt-4">
+      <Image
+        src={imagePreview}
+        alt="Service preview"
+        width={500}
+        height={500}
+        className="h-48 w-full rounded-xl object-cover"
+      />
+    </div>
+  )}
+</div>
 
         <button
           type="submit"

@@ -1,20 +1,30 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import { MapPin, Tag, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { authClient } from "@/lib/auth-client";
 
 import BookingForm from "@/components/services/BookingForm";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import ErrorState from "@/components/shared/ErrorState";
 import EmptyState from "@/components/shared/EmptyState";
 
-
-
 export default function ServiceDetailsPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const { data: session, isPending } = authClient.useSession();
+
+  useEffect(() => {
+    if (!isPending && !session?.user) {
+      router.replace(`/sign-in?callbackURL=${encodeURIComponent(pathname)}`);
+    }
+  }, [isPending, session, pathname, router]);
+
   const { id } = useParams();
 
   const [service, setService] = useState(null);
@@ -22,14 +32,11 @@ export default function ServiceDetailsPage() {
   const [error, setError] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
 
-
   const fetchService = useCallback(async () => {
-    
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/services/${id}`,{
-          
-        }
+        `${process.env.NEXT_PUBLIC_API_URL}/services/${id}`,
+        {},
       );
 
       if (!response.ok) {
@@ -57,38 +64,40 @@ export default function ServiceDetailsPage() {
   };
 
   const handleBooking = async (bookingData) => {
-  try {
-    setBookingLoading(true);
+    try {
+      setBookingLoading(true);
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/bookings`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/bookings`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            serviceId: id,
+            ...bookingData,
+          }),
         },
-        credentials: "include",
-        body: JSON.stringify({
-          serviceId: id,
-          ...bookingData,
-        }),
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to submit booking.");
       }
-    );
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to submit booking.");
+      toast.success(data.message);
+    } catch (error) {
+      toast.error(error.message || "Something went wrong.");
+    } finally {
+      setBookingLoading(false);
     }
-
-    toast.success(data.message);
-  } catch (error) {
-    toast.error(error.message || "Something went wrong.");
-  } finally {
-    setBookingLoading(false);
+  };
+  if (isPending || !session?.user) {
+    return <LoadingSpinner message="Checking your account..." />;
   }
-};
-
   if (loading) {
     return <LoadingSpinner message="Loading service details..." />;
   }

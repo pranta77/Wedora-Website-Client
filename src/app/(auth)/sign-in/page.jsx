@@ -35,7 +35,7 @@ export default function SignInPage() {
 
       if (!sessionData?.user) {
         throw new Error(
-          "Signed in, but session cookie was not saved. Check backend CORS/cookie settings."
+          "Signed in, but session cookie was not saved. Check backend CORS/cookie settings.",
         );
       }
 
@@ -50,7 +50,17 @@ export default function SignInPage() {
             ? "/dashboard/admin"
             : "/dashboard/customer";
 
-      window.location.href = dashboardLink;
+      const params = new URLSearchParams(window.location.search);
+      const callbackURL = params.get("callbackURL");
+
+      const redirectTo =
+        callbackURL &&
+        callbackURL.startsWith("/") &&
+        !callbackURL.startsWith("//")
+          ? callbackURL
+          : dashboardLink;
+
+      window.location.href = redirectTo;
     } catch (err) {
       setError(err.message || "Something went wrong.");
     } finally {
