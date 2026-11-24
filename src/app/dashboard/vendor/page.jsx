@@ -1,9 +1,14 @@
 
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   BriefcaseBusiness,
   CalendarCheck,
-  CreditCard,
+  CalendarClock,
+  CheckCircle,
+  Crown,
   Plus,
   ArrowRight,
 } from "lucide-react";
@@ -11,25 +16,102 @@ import {
 const stats = [
   {
     title: "Total Services",
-    value: "0",
+    key: "totalServices",
     icon: BriefcaseBusiness,
     color: "bg-pink-100 text-pink-600",
   },
   {
-    title: "Pending Bookings",
-    value: "0",
-    icon: CalendarCheck,
+    title: "Active Services",
+    key: "activeServices",
+    icon: CheckCircle,
+    color: "bg-green-100 text-green-600",
+  },
+  {
+    title: "Pending Booking Requests",
+    key: "pendingBookings",
+    icon: CalendarClock,
     color: "bg-amber-100 text-amber-600",
   },
   {
-    title: "Total Earnings",
-    value: "$0",
-    icon: CreditCard,
-    color: "bg-green-100 text-green-600",
+    title: "Accepted Bookings",
+    key: "acceptedBookings",
+    icon: CalendarCheck,
+    color: "bg-purple-100 text-purple-600",
+  },
+  {
+    title: "Current Subscription",
+    key: "subscriptionPlan",
+    icon: Crown,
+    color: "bg-rose-100 text-rose-600",
   },
 ];
 
 export default function VendorDashboardPage() {
+  const [counts, setCounts] = useState({
+    totalServices: 0,
+    activeServices: 0,
+    pendingBookings: 0,
+    acceptedBookings: 0,
+    subscriptionPlan: "Basic",
+  });
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const [servicesResponse, bookingsResponse, profileResponse] =
+          await Promise.all([
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/vendor/services`, {
+              credentials: "include",
+            }),
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/vendor/bookings`, {
+              credentials: "include",
+            }),
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/vendor/profile`, {
+              credentials: "include",
+            }),
+          ]);
+
+        const [servicesData, bookingsData, profileData] =
+          await Promise.all([
+            servicesResponse.json(),
+            bookingsResponse.json(),
+            profileResponse.json(),
+          ]);
+
+        if (
+          !servicesResponse.ok ||
+          !bookingsResponse.ok ||
+          !profileResponse.ok
+        ) {
+          throw new Error("Failed to load vendor dashboard data.");
+        }
+
+        const services = servicesData.services || [];
+        const bookings = bookingsData.bookings || [];
+        const vendor = profileData.vendor;
+
+        setCounts({
+          totalServices: services.length,
+          activeServices: services.filter(
+            (service) =>
+              service.status === "approved" && service.isActive === true
+          ).length,
+          pendingBookings: bookings.filter(
+            (booking) => booking.status === "pending"
+          ).length,
+          acceptedBookings: bookings.filter(
+            (booking) => booking.status === "accepted"
+          ).length,
+          subscriptionPlan: vendor?.subscriptionPlan || "Basic",
+        });
+      } catch (error) {
+        console.error("Vendor dashboard error:", error);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
   return (
     <div className="space-y-8">
       <div>
@@ -56,8 +138,8 @@ export default function VendorDashboardPage() {
                   <p className="text-sm font-medium text-gray-500">
                     {stat.title}
                   </p>
-                  <h2 className="mt-3 text-3xl font-bold text-gray-900">
-                    {stat.value}
+                  <h2 className="mt-3 text-3xl font-bold capitalize text-gray-900">
+                    {counts[stat.key]}
                   </h2>
                 </div>
 
@@ -99,7 +181,10 @@ export default function VendorDashboardPage() {
             className="flex items-center justify-between rounded-xl bg-purple-50 p-5 transition hover:bg-purple-100"
           >
             <div className="flex items-center gap-3">
-              <BriefcaseBusiness className="text-purple-600" size={24} />
+              <BriefcaseBusiness
+                className="text-purple-600"
+                size={24}
+              />
               <span className="font-semibold text-gray-800">
                 Manage Services
               </span>

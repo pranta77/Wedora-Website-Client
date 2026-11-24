@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Search, SlidersHorizontal } from "lucide-react";
@@ -41,12 +40,14 @@ export default function ServiceFilters({
           className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-pink-500"
         >
           <option value="">All Categories</option>
-          <option value="Photography">Photography</option>
-          <option value="Catering">Catering</option>
+          <option value="Photography & Videography">
+            Photography & Videography
+          </option>
           <option value="Wedding Venues">Wedding Venues</option>
-          <option value="Decoration">Decoration</option>
-          <option value="Makeup & Beauty">Makeup & Beauty</option>
-          <option value="Music & Entertainment">Music & Entertainment</option>
+          <option value="Decoration & Florist">Decoration & Florist</option>
+          <option value="Catering Services">Catering Services</option>
+          <option value="Makeup & Styling">Makeup & Styling</option>
+          <option value="Wedding Fashion">Wedding Fashion</option>
         </select>
 
         <input

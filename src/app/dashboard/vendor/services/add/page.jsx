@@ -1,4 +1,3 @@
-
 "use client";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -30,48 +29,48 @@ export default function AddServicePage() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  setLoading(true);
+    setLoading(true);
 
-  try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/services`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/services`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(formData),
         },
-        credentials: "include",
-        body: JSON.stringify(formData),
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to add service.");
       }
-    );
 
-    const data = await response.json();
+      toast.success(data.message);
 
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to add service.");
+      setFormData({
+        serviceName: "",
+        category: "",
+        description: "",
+        price: "",
+        location: "",
+        images: "",
+      });
+
+      router.push("/dashboard/vendor/services");
+      router.refresh();
+    } catch (error) {
+      toast.error(error.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
     }
-
-    toast.success(data.message);
-
-    setFormData({
-      serviceName: "",
-      category: "",
-      description: "",
-      price: "",
-      location: "",
-      images: "",
-    });
-
-    router.push("/dashboard/vendor/services");
-    router.refresh();
-  } catch (error) {
-    toast.error(error.message || "Something went wrong.");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
@@ -89,7 +88,8 @@ export default function AddServicePage() {
         </h1>
 
         <p className="mt-2 text-gray-500">
-          Share your wedding service with couples looking for trusted professionals.
+          Share your wedding service with couples looking for trusted
+          professionals.
         </p>
       </div>
 
@@ -125,13 +125,14 @@ export default function AddServicePage() {
             required
             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-pink-500"
           >
-            <option value="">Select a category</option>
-            <option value="Photography">Photography</option>
-            <option value="Catering">Catering</option>
+            <option value="Photography & Videography">
+              Photography & Videography
+            </option>
             <option value="Wedding Venues">Wedding Venues</option>
-            <option value="Decoration">Decoration</option>
-            <option value="Makeup & Beauty">Makeup & Beauty</option>
-            <option value="Music & Entertainment">Music & Entertainment</option>
+            <option value="Decoration & Florist">Decoration & Florist</option>
+            <option value="Catering Services">Catering Services</option>
+            <option value="Makeup & Styling">Makeup & Styling</option>
+            <option value="Wedding Fashion">Wedding Fashion</option>
           </select>
         </div>
 

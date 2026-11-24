@@ -1,6 +1,6 @@
 
 import Link from "next/link";
-import { MapPin, ArrowRight, Tag } from "lucide-react";
+import { MapPin, ArrowRight, Tag, UserRound } from "lucide-react";
 import Image from "next/image";
 
 const ServiceCard = ({ service }) => {
@@ -11,10 +11,12 @@ const ServiceCard = ({ service }) => {
     price,
     location,
     images,
+    vendorName,
   } = service;
 
   return (
     <div className="group overflow-hidden rounded-2xl border border-pink-100 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
+
       {/* Service Image */}
       <div className="relative h-56 overflow-hidden bg-pink-50">
         <Image
@@ -36,14 +38,30 @@ const ServiceCard = ({ service }) => {
           {serviceName}
         </h3>
 
+        {/* Location */}
         <div className="mt-3 flex items-center gap-2 text-sm text-gray-500">
           <MapPin size={16} className="text-pink-500" />
           {location}
         </div>
 
+        {/* Vendor Information */}
+        <div className="mt-3 flex items-center gap-2 text-sm text-gray-600">
+          <UserRound size={16} className="text-pink-500" />
+          <span>
+            Provided by{" "}
+            <span className="font-semibold text-gray-800">
+              {vendorName || "Wedding Vendor"}
+            </span>
+          </span>
+        </div>
+
+        {/* Price and Details */}
         <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-4">
           <div>
-            <p className="text-xs text-gray-500">Starting from</p>
+            <p className="text-xs text-gray-500">
+              Starting from
+            </p>
+
             <p className="mt-1 flex items-center gap-1 font-bold text-pink-600">
               <Tag size={15} />
               ৳{Number(price).toLocaleString("en-BD")}

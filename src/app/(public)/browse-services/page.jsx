@@ -1,7 +1,7 @@
-
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import ServiceFilters from "@/components/services/ServiceFilters";
 import ServiceGrid from "@/components/services/ServiceGrid";
@@ -9,6 +9,7 @@ import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import ErrorState from "@/components/shared/ErrorState";
 
 export default function BrowseServicesPage() {
+  const searchParams = useSearchParams();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -24,7 +25,7 @@ export default function BrowseServicesPage() {
       setError(false);
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/services`
+        `${process.env.NEXT_PUBLIC_API_URL}/services`,
       );
 
       if (!response.ok) {
@@ -44,6 +45,10 @@ export default function BrowseServicesPage() {
   useEffect(() => {
     fetchServices();
   }, []);
+  useEffect(() => {
+  const selectedCategory = searchParams.get("category");
+  setCategory(selectedCategory || "");
+}, [searchParams]);
 
   const filteredServices = services
     .filter((service) => {
@@ -51,8 +56,20 @@ export default function BrowseServicesPage() {
         ?.toLowerCase()
         .includes(search.toLowerCase());
 
+      const categoryAliases = {
+        "Photography & Videography": [
+          "Photography",
+          "Photography & Videography",
+        ],
+        "Wedding Venues": ["Wedding Venues"],
+        "Decoration & Florist": ["Decoration", "Decoration & Florist"],
+        "Catering Services": ["Catering", "Catering Services"],
+        "Makeup & Styling": ["Makeup & Beauty", "Makeup & Styling"],
+        "Wedding Fashion": ["Wedding Fashion"],
+      };
+
       const matchesCategory =
-        !category || service.category === category;
+        !category || categoryAliases[category]?.includes(service.category);
 
       const matchesLocation = service.location
         ?.toLowerCase()
@@ -85,8 +102,8 @@ export default function BrowseServicesPage() {
           </h1>
 
           <p className="mx-auto mt-4 max-w-2xl text-gray-500">
-            Discover trusted wedding professionals and find everything
-            you need to make your special day unforgettable.
+            Discover trusted wedding professionals and find everything you need
+            to make your special day unforgettable.
           </p>
         </div>
 

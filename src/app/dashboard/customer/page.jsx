@@ -1,4 +1,7 @@
 
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   CalendarDays,
@@ -11,25 +14,64 @@ import {
 const stats = [
   {
     title: "Total Bookings",
-    value: "0",
+    key: "total",
     icon: CalendarDays,
     color: "bg-pink-100 text-pink-600",
   },
   {
     title: "Pending Bookings",
-    value: "0",
+    key: "pending",
     icon: Clock,
     color: "bg-amber-100 text-amber-600",
   },
   {
     title: "Saved Services",
-    value: "0",
+    key: "saved",
     icon: Heart,
     color: "bg-purple-100 text-purple-600",
   },
 ];
 
+
 export default function CustomerDashboardPage() {
+
+const [counts, setCounts] = useState({
+  total: 0,
+  pending: 0,
+  saved: 0,
+});
+
+useEffect(() => {
+  const fetchBookings = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/customer/bookings`,
+        { credentials: "include" }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to load bookings.");
+      }
+
+      const bookings = data.bookings || [];
+
+      setCounts({
+        total: bookings.length,
+        pending: bookings.filter(
+          (booking) => booking.status === "pending"
+        ).length,
+        saved: 0,
+      });
+    } catch (error) {
+      console.error("Customer dashboard error:", error);
+    }
+  };
+
+  fetchBookings();
+}, []);
+
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
@@ -60,7 +102,8 @@ export default function CustomerDashboardPage() {
                   </p>
 
                   <h2 className="mt-3 text-3xl font-bold text-gray-900">
-                    {stat.value}
+                    {/* {stat.value} */}
+                    {counts[stat.key]}
                   </h2>
                 </div>
 

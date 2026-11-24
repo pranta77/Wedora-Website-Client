@@ -48,7 +48,7 @@ const DashboardSidebar = () => {
     admin: {
       title: "Admin Dashboard",
       links: [
-        { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
+        { name: "Overview", href: "/dashboard/admin", icon: LayoutDashboard },
         { name: "Manage Users", href: "/dashboard/admin/users", icon: Users },
         { name: "Manage Services", href: "/dashboard/admin/services", icon: BriefcaseBusiness },
         { name: "Transactions", href: "/dashboard/admin/transactions", icon: ReceiptText },
