@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { LoaderCircle, Save, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { getTokenFromClient } from "@/lib/getTokenFromClient";
 
 const initialForm = {
   serviceName: "",
@@ -29,7 +29,7 @@ export default function EditServicePage() {
       try {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/vendor/services`,
-          { credentials: "include" }
+          { credentials: "include" },
         );
 
         const data = await response.json();
@@ -76,6 +76,9 @@ export default function EditServicePage() {
     setSaving(true);
 
     try {
+      // JWT
+      const token = await getTokenFromClient();
+      
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/vendor/services/${id}`,
         {
@@ -83,9 +86,10 @@ export default function EditServicePage() {
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(formData),
-        }
+        },
       );
 
       const data = await response.json();

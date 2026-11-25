@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { ImagePlus, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { authClient } from "@/lib/auth-client";
+import { getTokenFromClient } from "@/lib/getTokenFromClient";
 
 export default function AddServicePage() {
   const router = useRouter();
@@ -17,11 +19,10 @@ export default function AddServicePage() {
     location: "",
     images: "",
   });
-  
 
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState(null);
-const [imagePreview, setImagePreview] = useState("");
+  const [imagePreview, setImagePreview] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -32,23 +33,23 @@ const [imagePreview, setImagePreview] = useState("");
     }));
   };
   const handleImageChange = (e) => {
-  const file = e.target.files[0];
+    const file = e.target.files[0];
 
-  if (!file) return;
+    if (!file) return;
 
-  if (!file.type.startsWith("image/")) {
-    toast.error("Please select a valid image.");
-    return;
-  }
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image.");
+      return;
+    }
 
-  if (file.size > 5 * 1024 * 1024) {
-    toast.error("Image size must be less than 5 MB.");
-    return;
-  }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size must be less than 5 MB.");
+      return;
+    }
 
-  setImageFile(file);
-  setImagePreview(URL.createObjectURL(file));
-};
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -57,39 +58,42 @@ const [imagePreview, setImagePreview] = useState("");
 
     try {
       if (!imageFile) {
-  throw new Error("Please select a service image.");
-}
+        throw new Error("Please select a service image.");
+      }
 
-const imageData = new FormData();
-imageData.append("image", imageFile);
+      const imageData = new FormData();
+      imageData.append("image", imageFile);
 
-const uploadResponse = await fetch(
-  `https://api.imgbb.com/1/upload?key=${process.env.NEXT_PUBLIC_IMGBB_API_KEY}`,
-  {
-    method: "POST",
-    body: imageData,
-  }
-);
+      const uploadResponse = await fetch(
+        `https://api.imgbb.com/1/upload?key=${process.env.NEXT_PUBLIC_IMGBB_API_KEY}`,
+        {
+          method: "POST",
+          body: imageData,
+        },
+      );
 
-const uploadData = await uploadResponse.json();
+      const uploadData = await uploadResponse.json();
 
-if (!uploadResponse.ok || !uploadData.success) {
-  throw new Error("Image upload failed. Please try again.");
-}
+      if (!uploadResponse.ok || !uploadData.success) {
+        throw new Error("Image upload failed. Please try again.");
+      }
+      // JWT TOKEN
+      const token = await getTokenFromClient();
 
-const imageUrl = uploadData.data.url;
+      const imageUrl = uploadData.data.url;
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/services`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           credentials: "include",
           body: JSON.stringify({
-  ...formData,
-  images: imageUrl,
-}),
+            ...formData,
+            images: imageUrl,
+          }),
         },
       );
 
@@ -110,7 +114,7 @@ const imageUrl = uploadData.data.url;
         images: "",
       });
       setImageFile(null);
-setImagePreview("");
+      setImagePreview("");
 
       router.push("/dashboard/vendor/services");
       router.refresh();
@@ -237,35 +241,35 @@ setImagePreview("");
         </div>
 
         <div>
-  <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
-    <ImagePlus size={18} className="text-pink-600" />
-    Service Image
-  </label>
+          <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
+            <ImagePlus size={18} className="text-pink-600" />
+            Service Image
+          </label>
 
-  <input
-    type="file"
-    accept="image/*"
-    onChange={handleImageChange}
-    required
-    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-pink-50 file:px-4 file:py-2 file:font-semibold file:text-pink-600"
-  />
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            required
+            className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-pink-50 file:px-4 file:py-2 file:font-semibold file:text-pink-600"
+          />
 
-  <p className="mt-2 text-xs text-gray-400">
-    Upload an image (JPG, PNG, WEBP). Maximum size: 5 MB.
-  </p>
+          <p className="mt-2 text-xs text-gray-400">
+            Upload an image (JPG, PNG, WEBP). Maximum size: 5 MB.
+          </p>
 
-  {imagePreview && (
-    <div className="mt-4">
-      <Image
-        src={imagePreview}
-        alt="Service preview"
-        width={500}
-        height={500}
-        className="h-48 w-full rounded-xl object-cover"
-      />
-    </div>
-  )}
-</div>
+          {imagePreview && (
+            <div className="mt-4">
+              <Image
+                src={imagePreview}
+                alt="Service preview"
+                width={500}
+                height={500}
+                className="h-48 w-full rounded-xl object-cover"
+              />
+            </div>
+          )}
+        </div>
 
         <button
           type="submit"

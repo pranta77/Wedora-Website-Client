@@ -1,13 +1,7 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  CalendarDays,
-  Clock,
-  CheckCircle,
-  XCircle,
-} from "lucide-react";
+import { CalendarDays, Clock, CheckCircle, XCircle } from "lucide-react";
 
 import StatsCard from "@/components/dashboard/StatsCard";
 import { authClient } from "@/lib/auth-client";
@@ -30,7 +24,7 @@ export default function DashboardPage() {
       try {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/customer/bookings`,
-          { credentials: "include" }
+          { credentials: "include" },
         );
 
         const data = await response.json();
@@ -43,9 +37,12 @@ export default function DashboardPage() {
 
         setCounts({
           total: bookings.length,
-          pending: bookings.filter((booking) => booking.status === "pending").length,
-          accepted: bookings.filter((booking) => booking.status === "accepted").length,
-          rejected: bookings.filter((booking) => booking.status === "rejected").length,
+          pending: bookings.filter((booking) => booking.status === "pending")
+            .length,
+          accepted: bookings.filter((booking) => booking.status === "accepted")
+            .length,
+          rejected: bookings.filter((booking) => booking.status === "rejected")
+            .length,
         });
       } catch (error) {
         console.error("Dashboard error:", error);
@@ -81,18 +78,36 @@ export default function DashboardPage() {
 
       {role === "customer" && (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-          <StatsCard title="Total Bookings" value={counts.total} icon={CalendarDays} color="pink" />
-          <StatsCard title="Pending Bookings" value={counts.pending} icon={Clock} color="orange" />
-          <StatsCard title="Accepted Bookings" value={counts.accepted} icon={CheckCircle} color="green" />
-          <StatsCard title="Rejected Bookings" value={counts.rejected} icon={XCircle} color="purple" />
+          <StatsCard
+            title="Total Bookings"
+            value={counts.total}
+            icon={CalendarDays}
+            color="pink"
+          />
+          <StatsCard
+            title="Pending Bookings"
+            value={counts.pending}
+            icon={Clock}
+            color="orange"
+          />
+          <StatsCard
+            title="Accepted Bookings"
+            value={counts.accepted}
+            icon={CheckCircle}
+            color="green"
+          />
+          <StatsCard
+            title="Rejected Bookings"
+            value={counts.rejected}
+            icon={XCircle}
+            color="purple"
+          />
         </div>
       )}
 
       {role === "vendor" && (
         <div className="rounded-2xl border border-pink-100 bg-white p-7 shadow-sm">
-          <h3 className="text-xl font-bold text-gray-900">
-            Vendor Dashboard
-          </h3>
+          <h3 className="text-xl font-bold text-gray-900">Vendor Dashboard</h3>
           <p className="mt-2 text-gray-500">
             Manage your services, booking requests, and subscription plan.
           </p>
@@ -101,9 +116,7 @@ export default function DashboardPage() {
 
       {role === "admin" && (
         <div className="rounded-2xl border border-pink-100 bg-white p-7 shadow-sm">
-          <h3 className="text-xl font-bold text-gray-900">
-            Admin Dashboard
-          </h3>
+          <h3 className="text-xl font-bold text-gray-900">Admin Dashboard</h3>
           <p className="mt-2 text-gray-500">
             Manage users, wedding services, and platform transactions.
           </p>
@@ -111,13 +124,11 @@ export default function DashboardPage() {
       )}
 
       <div className="rounded-2xl bg-linear-to-r from-pink-600 to-rose-400 p-7 text-white shadow-md">
-        <h3 className="text-xl font-bold">
-          Plan Your Perfect Wedding
-        </h3>
+        <h3 className="text-xl font-bold">Plan Your Perfect Wedding</h3>
 
         <p className="mt-2 max-w-xl text-sm leading-6 text-white/90">
-          Discover amazing wedding services, connect with trusted
-          professionals, and make your special day unforgettable with Wedora.
+          Discover amazing wedding services, connect with trusted professionals,
+          and make your special day unforgettable with Wedora.
         </p>
       </div>
     </div>
