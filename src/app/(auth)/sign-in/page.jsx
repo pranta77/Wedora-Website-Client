@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Heart, Eye, EyeOff } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
@@ -10,8 +10,9 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const { data: googleSession, isPending: sessionPending } =
+    authClient.useSession();
 
-  
   const handleSignIn = async (e) => {
     e.preventDefault();
     setError("");
@@ -68,6 +69,71 @@ export default function SignInPage() {
       setLoading(false);
     }
   };
+  const handleGoogleSignIn = async () => {
+    try {
+      setError("");
+      setLoading(true);
+
+      const params = new URLSearchParams(window.location.search);
+      const originalCallback = params.get("callbackURL");
+
+      const googleCallbackURL = new URL("/sign-in", window.location.origin);
+
+      googleCallbackURL.searchParams.set("google", "success");
+
+      if (
+        originalCallback?.startsWith("/") &&
+        !originalCallback.startsWith("//")
+      ) {
+        googleCallbackURL.searchParams.set("callbackURL", originalCallback);
+      }
+
+      const { error } = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: googleCallbackURL.toString(),
+      });
+
+      if (error) {
+        throw new Error(error.message || "Google sign in failed.");
+      }
+    } catch (err) {
+      setError(err.message || "Google sign in failed.");
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    if (
+      params.get("google") !== "success" ||
+      sessionPending ||
+      !googleSession?.user
+    ) {
+      return;
+    }
+
+    const role = googleSession.user.role;
+
+    const dashboardLink =
+      role === "vendor"
+        ? "/dashboard/vendor"
+        : role === "admin"
+          ? "/dashboard/admin"
+          : "/dashboard/customer";
+
+    const callbackURL = params.get("callbackURL");
+
+    const redirectTo =
+      callbackURL &&
+      callbackURL.startsWith("/") &&
+      !callbackURL.startsWith("//")
+        ? callbackURL
+        : dashboardLink;
+
+    toast.success("Welcome to Wedora!");
+
+    window.location.replace(redirectTo);
+  }, [sessionPending, googleSession]);
 
   return (
     <div className="flex min-h-[calc(100vh-80px)] items-center justify-center bg-rose-50/50 px-4 py-12">
@@ -138,6 +204,21 @@ export default function SignInPage() {
               {loading ? "Signing In..." : "Sign In"}
             </button>
           </form>
+          <div className="my-6 flex items-center gap-4">
+            <div className="h-px flex-1 bg-gray-200" />
+            <span className="text-sm text-gray-400">OR</span>
+            <div className="h-px flex-1 bg-gray-200" />
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+            className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white py-3 font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <span className="text-xl font-bold text-blue-600">G</span>
+            Continue with Google
+          </button>
 
           <p className="mt-7 text-center text-sm text-gray-600">
             Don&apos;t have an account?{" "}

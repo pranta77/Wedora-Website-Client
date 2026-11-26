@@ -8,6 +8,7 @@ import {
   MapPin,
   Phone,
 } from "lucide-react";
+import { FaFacebook, FaInstagram } from "react-icons/fa";
 
 const Footer = () => {
   return (
@@ -40,7 +41,7 @@ const Footer = () => {
               aria-label="Facebook"
               className="rounded-full bg-white/10 p-2.5 transition hover:bg-pink-500"
             >
-              {/* <Facebook size={18} /> */}
+              <FaFacebook size={18}/>
             </a>
 
             <a
@@ -50,7 +51,7 @@ const Footer = () => {
               aria-label="Instagram"
               className="rounded-full bg-white/10 p-2.5 transition hover:bg-pink-500"
             >
-              {/* <Instagram size={18} /> */}
+              <FaInstagram size={18} />
             </a>
           </div>
         </div>

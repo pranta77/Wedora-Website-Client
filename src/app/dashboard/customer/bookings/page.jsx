@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, MapPin, PackageOpen } from "lucide-react";
+import Image from "next/image";
+import { CalendarDays, MapPin, PackageOpen ,Clock} from "lucide-react";
 import { toast } from "sonner";
 
 export default function CustomerBookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+const [selectedBooking, setSelectedBooking] = useState(null);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -142,7 +144,37 @@ export default function CustomerBookingsPage() {
               key={booking._id}
               className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:shadow-md"
             >
-              <div className="flex items-start justify-between gap-3">
+
+              <div className="flex items-start gap-4">
+  <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-rose-50">
+  {booking.serviceImages?.[0] ? (
+    <Image
+      src={booking.serviceImages[0]}
+      alt={booking.serviceName}
+      fill
+      sizes="80px"
+      className="object-cover"
+    />
+  ) : (
+    <PackageOpen className="h-8 w-8 text-[#285943]" />
+  )}
+</div>
+
+  <div className="flex flex-1 items-start justify-between gap-3">
+    <h2 className="text-lg font-bold text-gray-900">
+      {booking.serviceName}
+    </h2>
+
+    <span
+      className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold capitalize ${getStatusStyle(
+        booking.status,
+      )}`}
+    >
+      {booking.status}
+    </span>
+  </div>
+</div>
+              {/* <div className="flex items-start justify-between gap-3">
                 <h2 className="text-lg font-bold text-gray-900">
                   {booking.serviceName}
                 </h2>
@@ -154,7 +186,7 @@ export default function CustomerBookingsPage() {
                 >
                   {booking.status}
                 </span>
-              </div>
+              </div> */}
 
               <p className="mt-2 text-sm text-gray-500">
                 Vendor: {booking.vendorName}
@@ -172,8 +204,24 @@ export default function CustomerBookingsPage() {
                   <MapPin size={18} className="text-[#285943]" />
                   {booking.eventLocation}
                 </div>
+                <div className="flex items-center gap-2">
+  <Clock size={18} className="text-[#285943]" />
+  Requested On:{" "}
+  {booking.createdAt
+    ? new Date(booking.createdAt).toLocaleDateString("en-BD", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : "N/A"}
+</div>
               </div>
-
+<button
+  onClick={() => setSelectedBooking(booking)}
+  className="mt-5 w-full rounded-xl border border-[#285943] px-4 py-2.5 text-sm font-semibold text-[#285943] transition hover:bg-[#285943] hover:text-white"
+>
+  View Booking Details
+</button>
               <div className="mt-5 flex items-center justify-between border-t border-gray-100 pt-4">
                 <span className="text-sm text-gray-500">Service Price</span>
 
@@ -193,6 +241,115 @@ export default function CustomerBookingsPage() {
           ))}
         </div>
       )}
+      {selectedBooking && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-gray-900">
+          Booking Details
+        </h2>
+
+        <button
+          onClick={() => setSelectedBooking(null)}
+          className="rounded-lg px-3 py-1 text-2xl text-gray-500 hover:bg-gray-100"
+        >
+          &times;
+        </button>
+      </div>
+
+      <div className="relative mt-5 flex h-48 items-center justify-center overflow-hidden rounded-xl bg-rose-50">
+  {selectedBooking.serviceImages?.[0] ? (
+    <Image
+      src={selectedBooking.serviceImages[0]}
+      alt={selectedBooking.serviceName}
+      fill
+      sizes="(max-width: 512px) 100vw, 512px"
+      className="object-cover"
+    />
+  ) : (
+    <PackageOpen className="h-16 w-16 text-[#285943]" />
+  )}
+</div>
+
+      <div className="mt-5 space-y-4">
+        <div>
+          <p className="text-sm text-gray-500">Service Name</p>
+          <p className="font-semibold text-gray-900">
+            {selectedBooking.serviceName}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-sm text-gray-500">Vendor</p>
+          <p className="font-semibold text-gray-900">
+            {selectedBooking.vendorName}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-sm text-gray-500">Event Date</p>
+          <p className="font-semibold text-gray-900">
+            {selectedBooking.eventDate
+              ? new Date(
+                  `${selectedBooking.eventDate}T00:00:00`,
+                ).toLocaleDateString("en-BD")
+              : "N/A"}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-sm text-gray-500">Event Location</p>
+          <p className="font-semibold text-gray-900">
+            {selectedBooking.eventLocation}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-sm text-gray-500">Booking Status</p>
+          <span
+            className={`inline-block rounded-full px-3 py-1 text-xs font-semibold capitalize ${getStatusStyle(
+              selectedBooking.status,
+            )}`}
+          >
+            {selectedBooking.status}
+          </span>
+        </div>
+
+        <div>
+          <p className="text-sm text-gray-500">Booking Request Date</p>
+          <p className="font-semibold text-gray-900">
+            {selectedBooking.createdAt
+              ? new Date(selectedBooking.createdAt).toLocaleDateString(
+                  "en-BD",
+                )
+              : "N/A"}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-sm text-gray-500">Service Price</p>
+          <p className="text-lg font-bold text-[#285943]">
+            ৳{Number(selectedBooking.price).toLocaleString("en-BD")}
+          </p>
+        </div>
+
+        {selectedBooking.message && (
+          <div>
+            <p className="text-sm text-gray-500">Additional Message</p>
+            <p className="text-gray-700">{selectedBooking.message}</p>
+          </div>
+        )}
+      </div>
+
+      <button
+        onClick={() => setSelectedBooking(null)}
+        className="mt-6 w-full rounded-xl bg-[#285943] px-4 py-3 font-semibold text-white transition hover:bg-[#1f4635]"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+)}
     </div>
   );
 }

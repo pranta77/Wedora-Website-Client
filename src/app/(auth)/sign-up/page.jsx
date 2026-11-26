@@ -116,7 +116,7 @@ export default function SignUpPage() {
 
       const { error } = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "http://localhost:3000/dashboard",
+        callbackURL: "https://wedora-client.vercel.app/dashboard",
       });
 
       if (error) {
